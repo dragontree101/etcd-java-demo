@@ -3,6 +3,7 @@ package com.dragon.study.etcd;
 
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -44,10 +45,9 @@ public class EtcdWatcher {
     }
 
     @Override
-    public void onResponse(ResponsePromise<EtcdKeysResponse> responsePromise) {
+    public synchronized void onResponse(ResponsePromise<EtcdKeysResponse> responsePromise) {
       try {
         EtcdKeysResponse response = responsePromise.getNow();
-        this.etcdClient.getDir("/com/dragon/study/etcd").waitForChange().recursive().send().addListener(this);
         if (response != null) {
             if (response.action.name().equals("expire")) {
             if (addressList.contains(response.prevNode.value)) {
@@ -66,7 +66,13 @@ public class EtcdWatcher {
 
         }
       } catch (Exception e) {
+        e.printStackTrace();
+      }
 
+      try {
+        this.etcdClient.getDir("/com/dragon/study/etcd").waitForChange().recursive().send().addListener(this);
+      } catch (IOException e) {
+        e.printStackTrace();
       }
 
 
