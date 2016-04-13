@@ -27,8 +27,7 @@ public class EtcdWatcher {
       for (EtcdKeysResponse.EtcdNode node : nodes) {
         addressList.add(node.value);
       }
-      EtcdResponsePromise responsePromise = etcdClient.getDir("/com/dragon/study/etcd").waitForChange()
-          .recursive().send();
+      EtcdResponsePromise responsePromise = etcdClient.getDir("/com/dragon/study/etcd").recursive().waitForChange().send();
       responsePromise.addListener(new ResponsePromiseListener(etcdClient, addressList));
     } catch (Exception e) {
       e.printStackTrace();
@@ -70,7 +69,7 @@ public class EtcdWatcher {
       }
 
       try {
-        this.etcdClient.getDir("/com/dragon/study/etcd").waitForChange().recursive().send().addListener(this);
+        this.etcdClient.getDir("/com/dragon/study/etcd").recursive().waitForChange().send().addListener(this);
       } catch (IOException e) {
         e.printStackTrace();
       }
