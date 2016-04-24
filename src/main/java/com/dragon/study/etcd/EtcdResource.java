@@ -35,8 +35,22 @@ public class EtcdResource {
     try {
       register("com.dragon.study.etcd", "127.0.0.1:1234", 20);
       //相同时间触发两个事件,可能接受不到监听事件
-      Thread.sleep(100);
+      //Thread.sleep(100);
       register("com.dragon.study.etcd", "127.0.0.1:6789", 5);
+      register("com.dragon.study.etcd", "127.0.0.1:2222", 10);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  @Scheduled(fixedDelay = 10000L, initialDelay = 1000L)
+  public void sendHeartbeat2() {
+    try {
+      register("com.dragon.study.etcd2", "10.0.0.1:1234", 16);
+      //相同时间触发两个事件,可能接受不到监听事件
+      //Thread.sleep(100);
+      register("com.dragon.study.etcd2", "10.0.0.1:6789", 3);
+      register("com.dragon.study.etcd2", "10.0.0.1:2222", 7);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -45,6 +59,10 @@ public class EtcdResource {
   private void register(String serviceName, String address, int ttl) throws Exception {
     String key = serviceName.replaceAll("\\.", "/");
     EtcdClient client = EtcdClientHolder.get();
-    client.put(key + "/" + address, address).ttl(ttl).send().get();
+    try {
+      client.put(key + "/" + address, address).refresh(ttl).send().get();
+    } catch (Exception e) {
+      client.put(key + "/" + address, address).ttl(ttl).send().get();
+    }
   }
 }

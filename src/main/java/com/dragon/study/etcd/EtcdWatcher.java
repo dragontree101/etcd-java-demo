@@ -21,14 +21,23 @@ public class EtcdWatcher {
     List<String> addressList = new ArrayList<>();
     EtcdClient etcdClient = new EtcdClient();
 
+    String path1 = "/com/dragon/study/etcd";
+    String path2 = "/com/dragon/study/etcd2";
+
+    start(addressList, etcdClient, path1);
+    start(addressList, etcdClient, path2);
+
+  }
+
+  private static void start(List<String> addressList, EtcdClient etcdClient, String path) {
     try {
-      EtcdKeysResponse dirResponse = etcdClient.getDir("/com/dragon/study/etcd").send().get();
+      EtcdKeysResponse dirResponse = etcdClient.getDir(path).send().get();
       List<EtcdKeysResponse.EtcdNode> nodes = dirResponse.node.nodes;
       for (EtcdKeysResponse.EtcdNode node : nodes) {
         addressList.add(node.value);
       }
-      EtcdResponsePromise responsePromise = etcdClient.getDir("/com/dragon/study/etcd").recursive().waitForChange().send();
-      responsePromise.addListener(new ResponsePromiseListener(etcdClient, addressList));
+      EtcdResponsePromise responsePromise = etcdClient.getDir(path).recursive().waitForChange(0).send();
+      responsePromise.addListener(new ResponsePromiseListener(path, etcdClient, addressList));
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -36,18 +45,23 @@ public class EtcdWatcher {
 
   static class ResponsePromiseListener implements ResponsePromise.IsSimplePromiseResponseHandler<EtcdKeysResponse> {
 
+    String path;
     List<String> addressList;
     EtcdClient etcdClient;
-    public ResponsePromiseListener(EtcdClient etcdClient, List<String> addressList) {
+
+    public ResponsePromiseListener(String path, EtcdClient etcdClient, List<String> addressList) {
+      this.path = path;
       this.etcdClient = etcdClient;
       this.addressList = addressList;
     }
 
     @Override
-    public synchronized void onResponse(ResponsePromise<EtcdKeysResponse> responsePromise) {
+    public void onResponse(ResponsePromise<EtcdKeysResponse> responsePromise) {
+      long modifyIndex = 0;
       try {
         EtcdKeysResponse response = responsePromise.getNow();
         if (response != null) {
+            modifyIndex = response.node.modifiedIndex;
             if (response.action.name().equals("expire")) {
             if (addressList.contains(response.prevNode.value)) {
               addressList.remove(new String(response.prevNode.value));
@@ -66,13 +80,14 @@ public class EtcdWatcher {
         }
       } catch (Exception e) {
         e.printStackTrace();
+      } finally {
+        try {
+          this.etcdClient.getDir(this.path).recursive().waitForChange(modifyIndex+1).send().addListener(this);
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
 
-      try {
-        this.etcdClient.getDir("/com/dragon/study/etcd").recursive().waitForChange().send().addListener(this);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
 
 
 
