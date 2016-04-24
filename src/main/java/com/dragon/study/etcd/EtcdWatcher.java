@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import mousio.client.promises.ResponsePromise;
 import mousio.etcd4j.EtcdClient;
@@ -32,11 +33,13 @@ public class EtcdWatcher {
   private static void start(List<String> addressList, EtcdClient etcdClient, String path) {
     try {
       EtcdKeysResponse dirResponse = etcdClient.getDir(path).send().get();
+      //parent dir modify index
+      //long modifyIndex = dirResponse.node.getModifiedIndex();
       List<EtcdKeysResponse.EtcdNode> nodes = dirResponse.node.nodes;
       for (EtcdKeysResponse.EtcdNode node : nodes) {
         addressList.add(node.value);
       }
-      EtcdResponsePromise responsePromise = etcdClient.getDir(path).recursive().waitForChange(0).send();
+      EtcdResponsePromise responsePromise = etcdClient.getDir(path).recursive().waitForChange().send();
       responsePromise.addListener(new ResponsePromiseListener(path, etcdClient, addressList));
     } catch (Exception e) {
       e.printStackTrace();
@@ -82,9 +85,12 @@ public class EtcdWatcher {
         e.printStackTrace();
       } finally {
         try {
+          //如果监听失败,就无法再次监听
           this.etcdClient.getDir(this.path).recursive().waitForChange(modifyIndex+1).send().addListener(this);
+
         } catch (IOException e) {
           e.printStackTrace();
+          // 需要对于watch失败的情况做而外的处理
         }
       }
 
