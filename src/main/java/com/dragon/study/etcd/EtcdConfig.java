@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
+import java.net.URI;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -19,7 +20,11 @@ public class EtcdConfig {
 
   @PostConstruct
   public void initEtcdClient() {
-    EtcdClientHolder.setEtcdClient(new EtcdClient());
+    try {
+      EtcdClientHolder.setEtcdClient(new EtcdClient(new URI("http://127.0.0.1:4001")));
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @PreDestroy

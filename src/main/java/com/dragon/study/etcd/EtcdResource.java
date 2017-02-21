@@ -14,12 +14,12 @@ public class EtcdResource {
 
 //  @Scheduled(fixedDelay = 1000L, initialDelay = 1000L)
   public void getInfo() {
-    EtcdClient client = EtcdClientHolder.get();
+    EtcdClient client = new EtcdClient();
     System.out.println(
         "cluster is " + client.version().cluster + ", server is " + client.version().server);
   }
 
-//  @Scheduled(fixedDelay = 2000L, initialDelay = 2000L)
+  @Scheduled(fixedDelay = 2000L, initialDelay = 2000L)
   public void getAndSetKeyValue() {
     EtcdClient client = EtcdClientHolder.get();
     try {
@@ -30,7 +30,7 @@ public class EtcdResource {
     }
   }
 
-  @Scheduled(fixedDelay = 15000L, initialDelay = 1000L)
+//  @Scheduled(fixedDelay = 15000L, initialDelay = 1000L)
   public void sendHeartbeat() {
     try {
       register("com.dragon.study.etcd", "127.0.0.1:1234", 20);
@@ -43,7 +43,7 @@ public class EtcdResource {
     }
   }
 
-  @Scheduled(fixedDelay = 10000L, initialDelay = 1000L)
+//  @Scheduled(fixedDelay = 10000L, initialDelay = 1000L)
   public void sendHeartbeat2() {
     try {
       register("com.dragon.study.etcd2", "10.0.0.1:1234", 16);
