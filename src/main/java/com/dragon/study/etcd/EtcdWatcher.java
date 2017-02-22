@@ -45,17 +45,17 @@ public class EtcdWatcher {
       start(addressList, client, path1);
 //          start(addressList, etcdClient, path2);
 //      Thread.sleep(10000);
-      int index = 0;
-      while(index ++ < 10) {
-        System.out.println("--------" + index);
-        try {
-          EtcdKeysResponse response = client.get("/dragon/key1").send().get();
-        } catch (Exception e) {
-          System.out.println("~~~~~~");
-          e.printStackTrace();
-        }
-        Thread.sleep(3000);
-      }
+//      int index = 0;
+//      while(index ++ < 10) {
+//        System.out.println("--------" + index);
+//        try {
+//          EtcdKeysResponse response = client.get("/dragon/key1").send().get();
+//        } catch (Exception e) {
+//          System.out.println("~~~~~~");
+//          e.printStackTrace();
+//        }
+//        Thread.sleep(3000);
+//      }
 
 //      client.get(path1).waitForChange().shouldBeWaiting()
     } catch (Exception e) {
@@ -73,10 +73,10 @@ public class EtcdWatcher {
 //      for (EtcdKeysResponse.EtcdNode node : nodes) {
 //        addressList.add(node.value);
 //      }
-      EtcdResponsePromise responsePromise = etcdClient.get(path).setRetryPolicy(
-          RetryWithExponentialBackOff.DEFAULT).recursive().waitForChange().send();
+      EtcdResponsePromise responsePromise = etcdClient.get(path).recursive().waitForChange().send();
       responsePromise.addListener(new ResponsePromiseListener(path, etcdClient, addressList));
     } catch (Exception e) {
+      System.out.println("????????????");
       e.printStackTrace();
     }
   }
@@ -121,10 +121,10 @@ public class EtcdWatcher {
       } finally {
         try {
           //如果监听失败,就无法再次监听
-          this.etcdClient.getDir(this.path).setRetryPolicy(
-              RetryWithExponentialBackOff.DEFAULT).recursive().waitForChange(modifyIndex+1).send().addListener(this);
+          this.etcdClient.getDir(this.path).recursive().waitForChange(modifyIndex+1).send().addListener(this);
 
         } catch (Throwable e) {
+          System.out.println("????????????");
           e.printStackTrace();
           // 需要对于watch失败的情况做而外的处理
         }
